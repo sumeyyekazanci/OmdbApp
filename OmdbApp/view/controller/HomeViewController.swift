@@ -12,6 +12,7 @@ class HomeViewController: UIViewController {
     let searchController = UISearchController()
     let api: OmdbAPIProtocol = OmdbAPI()
     private var movies: [SearchedMovie] = [SearchedMovie]()
+    let activityIndicator: UIActivityIndicatorView = UIActivityIndicatorView.init(style: UIActivityIndicatorView.Style.medium)
     
     let tableView: UITableView = {
         let table = UITableView()
@@ -30,6 +31,10 @@ class HomeViewController: UIViewController {
         
         view.backgroundColor = .systemBackground
         view.addSubview(tableView)
+        
+        activityIndicator.alpha = 1.0
+        view.addSubview(activityIndicator)
+        activityIndicator.center = view.center
         
         searchController.searchResultsUpdater = self
         navigationItem.searchController = searchController
@@ -69,6 +74,7 @@ extension HomeViewController: UISearchBarDelegate, UISearchResultsUpdating {
         print(text)
         
         if text.count >= 3 {
+            activityIndicator.startAnimating()
             api.getMovies(searchText: text) { [weak self] result in
                 switch result {
                     
@@ -76,6 +82,9 @@ extension HomeViewController: UISearchBarDelegate, UISearchResultsUpdating {
                     print(data.Search)
                     self?.movies = data.Search
                     DispatchQueue.main.async {
+                        if ((self?.activityIndicator.isAnimating) != nil) {
+                            self?.activityIndicator.stopAnimating()
+                        }
                         self?.tableView.reloadData()
                     }
                    
@@ -83,6 +92,9 @@ extension HomeViewController: UISearchBarDelegate, UISearchResultsUpdating {
 //                    print(error.localizedDescription)
                     self?.movies = []
                     DispatchQueue.main.async {
+                        if ((self?.activityIndicator.isAnimating) != nil) {
+                            self?.activityIndicator.stopAnimating()
+                        }
                         self?.tableView.reloadData()
                     }
                     self?.alert()
